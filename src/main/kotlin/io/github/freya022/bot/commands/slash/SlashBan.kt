@@ -1,31 +1,22 @@
 package io.github.freya022.bot.commands.slash
 
-import com.freya02.botcommands.api.commands.annotations.BotPermissions
-import com.freya02.botcommands.api.commands.annotations.Command
-import com.freya02.botcommands.api.commands.annotations.UserPermissions
-import com.freya02.botcommands.api.commands.application.ApplicationCommand
-import com.freya02.botcommands.api.commands.application.GlobalApplicationCommandManager
-import com.freya02.botcommands.api.commands.application.annotations.AppDeclaration
-import com.freya02.botcommands.api.commands.application.slash.GuildSlashEvent
-import com.freya02.botcommands.api.commands.application.slash.annotations.JDASlashCommand
-import com.freya02.botcommands.api.commands.application.slash.annotations.SlashOption
-import com.freya02.botcommands.api.components.Components
-import com.freya02.botcommands.api.components.awaitAny
-import com.freya02.botcommands.api.components.event.ButtonEvent
-import com.freya02.botcommands.api.core.entities.InputUser
-import com.freya02.botcommands.api.core.service.annotations.BService
-import com.freya02.botcommands.api.core.service.annotations.ConditionalService
-import com.freya02.botcommands.api.core.utils.delay
-import com.freya02.botcommands.api.localization.annotations.LocalizationBundle
-import com.freya02.botcommands.api.localization.context.AppLocalizationContext
-import com.freya02.botcommands.api.localization.context.editLocalized
-import com.freya02.botcommands.api.localization.context.replaceLocalized
-import com.freya02.botcommands.api.localization.context.replyLocalizedEphemeral
-import io.github.freya022.bot.commands.FrontendChooser
-import io.github.freya022.bot.commands.SimpleFrontend
 import io.github.freya022.bot.resolvers.localize
+import io.github.freya022.botcommands.api.commands.annotations.Command
+import io.github.freya022.botcommands.api.commands.application.GlobalApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
+import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
+import io.github.freya022.botcommands.api.components.Components
+import io.github.freya022.botcommands.api.components.awaitAny
+import io.github.freya022.botcommands.api.components.event.ButtonEvent
+import io.github.freya022.botcommands.api.core.entities.InputUser
+import io.github.freya022.botcommands.api.core.utils.deleteDelayed
+import io.github.freya022.botcommands.api.localization.annotations.LocalizationBundle
+import io.github.freya022.botcommands.api.localization.context.AppLocalizationContext
+import io.github.freya022.botcommands.api.localization.context.editLocalized
+import io.github.freya022.botcommands.api.localization.context.replaceLocalized
+import io.github.freya022.botcommands.api.localization.context.replyLocalizedEphemeral
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.TimeoutCancellationException
-import mu.KotlinLogging
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle
 import java.util.concurrent.TimeUnit
@@ -42,8 +33,8 @@ data class DeleteTimeframe(val time: Long, val unit: TimeUnit) {
     override fun toString(): String = "$time ${unit.name.lowercase()}"
 }
 
-@BService
-class SlashBan(private val componentsService: Components) {
+@Command
+class SlashBanDetailedFront(private val componentsService: Components) {
     suspend fun onSlashBan(
         event: GuildSlashEvent,
         @LocalizationBundle("Commands", prefix = "ban") localizationContext: AppLocalizationContext,
@@ -82,8 +73,7 @@ class SlashBan(private val componentsService: Components) {
             componentGroup.awaitAny()
         } catch (e: TimeoutCancellationException) {
             return event.hook.editLocalized(localizationContext, "outputs.timeout")
-                .delay(5.seconds)
-                .flatMap { event.hook.deleteOriginal() }
+                .deleteDelayed(event.hook, 5.seconds)
                 .queue()
         }
 
@@ -111,14 +101,10 @@ class SlashBan(private val componentsService: Components) {
             else -> throw IllegalArgumentException("Unknown button ID: ${componentEvent.componentId}")
         }
     }
-}
 
-@Command
-@ConditionalService(FrontendChooser::class)
-class SlashBanDetailedFront {
     @AppDeclaration
     fun onDeclare(manager: GlobalApplicationCommandManager) {
-        manager.slashCommand("ban", function = SlashBan::onSlashBan) {
+        manager.slashCommand("ban", function = ::onSlashBan) {
             description = "Ban any user from this guild"
 
             botPermissions += Permission.BAN_MEMBERS
@@ -147,21 +133,4 @@ class SlashBanDetailedFront {
             }
         }
     }
-}
-
-@Command
-@SimpleFrontend
-@ConditionalService(FrontendChooser::class)
-class SlashBanSimplifiedFront(private val banImpl: SlashBan) : ApplicationCommand() {
-    @UserPermissions(Permission.BAN_MEMBERS)
-    @BotPermissions(Permission.BAN_MEMBERS)
-    @JDASlashCommand(name = "ban", description = "Ban any user from this guild")
-    suspend fun onSlashBan(
-        event: GuildSlashEvent,
-        @LocalizationBundle("Commands", prefix = "ban") localizationContext: AppLocalizationContext,
-        @SlashOption(description = "The user to ban") target: InputUser,
-        @SlashOption(description = "The timeframe of messages to delete with the specified unit") time: Long,
-        @SlashOption(description = "The unit of the delete timeframe", usePredefinedChoices = true) unit: TimeUnit,
-        @SlashOption(description = "The reason for the ban") reason: String = localizationContext.localize("outputs.defaultReason")
-    ) = banImpl.onSlashBan(event, localizationContext, target, DeleteTimeframe(time, unit), reason)
 }

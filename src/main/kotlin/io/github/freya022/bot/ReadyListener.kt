@@ -1,8 +1,8 @@
 package io.github.freya022.bot
 
-import com.freya02.botcommands.api.core.annotations.BEventListener
-import com.freya02.botcommands.api.core.service.annotations.BService
-import mu.KotlinLogging
+import io.github.freya022.botcommands.api.core.annotations.BEventListener
+import io.github.freya022.botcommands.api.core.service.annotations.BService
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.dv8tion.jda.api.events.session.ReadyEvent
 
 private val logger = KotlinLogging.logger { }
@@ -14,10 +14,10 @@ class ReadyListener {
         val jda = event.jda
 
         //Print some information about the bot
-        logger.info("Bot connected as ${jda.selfUser.name}")
-        logger.info("The bot is present on these guilds :")
+        logger.info { "Bot connected as ${jda.selfUser.name}" }
+        logger.info { "The bot is present on these guilds :" }
         for (guild in jda.guildCache) {
-            logger.info("\t- ${guild.name} (${guild.id})")
+            logger.info { "\t- ${guild.name} (${guild.id})" }
         }
     }
 }
