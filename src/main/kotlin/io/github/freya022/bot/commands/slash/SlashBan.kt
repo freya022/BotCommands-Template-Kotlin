@@ -25,16 +25,16 @@ import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger { }
 
-// This data class is practically pointless;
-// this is just to demonstrate how you can group parameters together,
-// so you can benefit from functions/backed properties limited to your parameters,
-// without polluting classes with extensions
-data class DeleteTimeframe(val time: Long, val unit: TimeUnit) {
-    override fun toString(): String = "$time ${unit.name.lowercase()}"
-}
-
 @Command
-class SlashBanDetailedFront(private val componentsService: Components) {
+class SlashBan(private val componentsService: Components) {
+    // This data class is practically pointless;
+    // this is just to demonstrate how you can group parameters together,
+    // so you can benefit from functions/backed properties limited to your parameters,
+    // without polluting classes with extensions
+    data class DeleteTimeframe(val time: Long, val unit: TimeUnit) {
+        override fun toString(): String = "$time ${unit.name.lowercase()}"
+    }
+
     suspend fun onSlashBan(
         event: GuildSlashEvent,
         @LocalizationBundle("Commands", prefix = "ban") localizationContext: AppLocalizationContext,
