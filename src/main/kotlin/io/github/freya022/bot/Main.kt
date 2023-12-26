@@ -57,7 +57,7 @@ object Main {
                     disableAutocompleteCache = true
                 }
 
-                addOwners(*config.ownerIds.toLongArray())
+                addOwners(config.ownerIds)
 
                 addSearchPath(mainPackageName)
 
