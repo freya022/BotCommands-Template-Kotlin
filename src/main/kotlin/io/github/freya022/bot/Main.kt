@@ -8,8 +8,6 @@ import io.github.freya022.botcommands.api.core.BotCommands
 import io.github.freya022.botcommands.api.core.config.DevConfig
 import io.github.freya022.botcommands.api.core.utils.namedDefaultScope
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.cancel
-import net.dv8tion.jda.api.events.session.ShutdownEvent
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import java.lang.management.ManagementFactory
 import kotlin.io.path.absolutePathString
@@ -45,9 +43,6 @@ object Main {
             // Create a scope for our event manager
             val scope = namedDefaultScope("$botName Coroutine", 4)
             val manager = CoroutineEventManager(scope, 1.minutes)
-            manager.listener<ShutdownEvent> {
-                scope.cancel()
-            }
 
             val config = Config.instance
 
