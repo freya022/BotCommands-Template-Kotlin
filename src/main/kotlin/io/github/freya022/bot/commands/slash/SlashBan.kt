@@ -2,8 +2,8 @@ package io.github.freya022.bot.commands.slash
 
 import io.github.freya022.bot.resolvers.localize
 import io.github.freya022.botcommands.api.commands.annotations.Command
-import io.github.freya022.botcommands.api.commands.application.GlobalApplicationCommandManager
-import io.github.freya022.botcommands.api.commands.application.annotations.AppDeclaration
+import io.github.freya022.botcommands.api.commands.application.provider.GlobalApplicationCommandManager
+import io.github.freya022.botcommands.api.commands.application.provider.GlobalApplicationCommandProvider
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent
 import io.github.freya022.botcommands.api.components.Components
 import io.github.freya022.botcommands.api.components.awaitAny
@@ -26,7 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 private val logger = KotlinLogging.logger { }
 
 @Command
-class SlashBan(private val componentsService: Components) {
+class SlashBan(private val componentsService: Components) : GlobalApplicationCommandProvider {
     // This data class is practically pointless;
     // this is just to demonstrate how you can group parameters together,
     // so you can benefit from functions/backed properties limited to your parameters,
@@ -61,7 +61,7 @@ class SlashBan(private val componentsService: Components) {
             constraints += event.user
         }
 
-        val componentGroup = componentsService.newEphemeralGroup(cancelButton, confirmButton) {
+        val componentGroup = componentsService.ephemeralGroup(cancelButton, confirmButton) {
             timeout(1.minutes)
         }
 
@@ -102,8 +102,7 @@ class SlashBan(private val componentsService: Components) {
         }
     }
 
-    @AppDeclaration
-    fun onDeclare(manager: GlobalApplicationCommandManager) {
+    override fun declareGlobalApplicationCommands(manager: GlobalApplicationCommandManager) {
         manager.slashCommand("ban", function = ::onSlashBan) {
             description = "Ban any user from this guild"
 
